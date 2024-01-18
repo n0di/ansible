@@ -1,0 +1,32 @@
+---
+- name: Backup Mikrotik
+  hosts: markets_mikrotiks
+  gather_facts: false
+
+  tasks:
+  - name: Upload_File
+    ansible.builtin.shell: >-
+      sshpass -p '{{ ansible_password }}' scp -o StrictHostKeyChecking=no -P 22 ./add_rules_100_1.rsc {{ ansible_user }}@{{ inventory_hostname }}:/add_rules_100_1.rsc
+    delegate_to: localhost
+
+  - name: Del_BlackList
+    routeros_command: 
+      commands: /ip firewall address-list remove [find where list~"ssh_stage*"]
+
+  - name: Export
+    ansible.builtin.shell: >-
+      sshpass -p '{{ ansible_password }}' ssh -o StrictHostKeyChecking=no {{ ansible_user }}@{{ inventory_hostname }}
+    register: export
+    delegate_to: localhost
+
+  - name: Del_BlackList
+    routeros_command: 
+      commands: /ip firewall address-list remove [find where list~"ssh_stage*"]
+      
+  - name: Add_rules
+    routeros_command:
+      commands: /import add_rules_100_1.rsc
+
+  - name: Remove_Rules
+    routeros_command:
+      commands: /file remove add_rules_100_1.rsc

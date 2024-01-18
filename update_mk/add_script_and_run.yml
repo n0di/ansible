@@ -1,0 +1,23 @@
+---
+- name: Backup Mikrotik
+  hosts: step_two
+  gather_facts: false
+
+  tasks:
+  - name: Upload_File
+    ansible.builtin.shell: >-
+      sshpass -p '{{ ansible_password }}' scp -o StrictHostKeyChecking=no -P 22 ./add_update_mk.rsc {{ ansible_user }}@{{ inventory_hostname }}:/add_update_mk.rsc
+    delegate_to: localhost
+
+  - name: run_cmd
+    routeros_command: 
+      commands: 
+        - /ip firewall address-list remove [find where list~"ssh_stage*"]
+        - /system script remove update_mk
+        - /import add_update_mk.rsc
+        - /file remove add_update_mk.rsc
+        - /system scheduler remove [/system scheduler find]
+        - /system scheduler add name=update_mk on-event="system script run update_mk" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=sep/09/2023 start-time=04:00:00
+        - /system scheduler add name=update_mk_routerboard on-event="system script run update_mk" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=sep/09/2023 start-time=04:30:00
+        - /system scheduler add name=remove_all_scheduler on-event="system scheduler remove [/system scheduler find]" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon start-date=sep/09/2023 start-time=05:00:00
+

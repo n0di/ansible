@@ -1,0 +1,12 @@
+---
+- name: Backup Mikrotik
+  hosts: error_routers
+  gather_facts: false
+
+  tasks:
+  - name: Export
+    ansible.builtin.shell: >-
+      python3 /home/hatter/pr/ansible/add_radius_mk/main.py {{ inventory_hostname }}
+    register: export
+    delegate_to: localhost
+    

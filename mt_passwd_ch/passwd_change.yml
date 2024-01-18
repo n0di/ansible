@@ -1,0 +1,21 @@
+---
+- name: Backup Mikrotik
+  hosts: error_routers
+  gather_facts: false
+
+  tasks:
+  - name: check_passwd
+    ansible.builtin.shell: >-
+      sshpass -p '{{ ansible_password }}' ssh -o StrictHostKeyChecking=no {{ ansible_user }}@{{ inventory_hostname }} /system identity print >> check.log
+    delegate_to: localhost
+
+  - name: run_cmd
+    routeros_command: 
+      commands: 
+        - /ip firewall address-list remove [find where list~"ssh_stage*"]
+        - /user set [find name=admin] password=PASSWD
+
+  - name: check_passwd
+    ansible.builtin.shell: >-
+      sshpass -p 'PASSWD' ssh -o StrictHostKeyChecking=no {{ ansible_user }}@{{ inventory_hostname }} /system identity print >> check.log
+    delegate_to: localhost

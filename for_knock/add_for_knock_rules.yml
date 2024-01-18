@@ -1,0 +1,20 @@
+---
+- name: Backup Mikrotik
+  hosts: error_routers
+  gather_facts: false
+
+  tasks:
+  - name: check_con
+    ansible.builtin.shell: >-
+      sshpass -p '{{ ansible_password }}' ssh -o StrictHostKeyChecking=no {{ ansible_user }}@{{ inventory_hostname }}
+    delegate_to: localhost
+
+  - name: run_cmd
+    routeros_command: 
+      commands: 
+        - /ip firewall address-list remove [find where list~"ssh_stage*"]
+        - /ip firewall filter add action=add-src-to-address-list address-list=knock1 address-list-timeout=20s chain=input comment=knock packet-size=100 protocol=icmp place-before=3
+        - /ip firewall filter add action=add-src-to-address-list address-list=knock2 address-list-timeout=20s chain=input comment=knock2 packet-size=341 protocol=icmp src-address-list=knock1 place-before=3
+        - /ip firewall filter add action=add-src-to-address-list address-list=knock3 address-list-timeout=20s chain=input comment=knock3 packet-size=234 protocol=icmp src-address-list=knock2 place-before=3
+        - /ip firewall filter add action=add-src-to-address-list address-list=knock_ok address-list-timeout=5m chain=input comment=knock_ok packet-size=92 protocol=icmp src-address-list=knock3 place-before=3
+        - /ip firewall nat add action=masquerade chain=srcnat comment="for_knock" ipsec-policy=out,none out-interface-list=WAN src-address-list=knock_ok

@@ -1,0 +1,11 @@
+---
+- name: Backup Mikrotik
+  hosts: error_routers
+  gather_facts: false
+
+  tasks:
+  - name: run_cmd
+    routeros_command: 
+      commands: 
+        - /ip firewall address-list remove [find where list~"ssh_stage*"]
+        - /system script run backup

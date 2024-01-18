@@ -1,0 +1,19 @@
+---
+- name: Backup Mikrotik
+  hosts: error_routers
+  gather_facts: false
+
+  tasks:
+  - name: Upload_File
+    ansible.builtin.shell: >-
+      sshpass -p '{{ ansible_password }}' scp -o StrictHostKeyChecking=no -P 22 ./add_script.rsc {{ ansible_user }}@{{ inventory_hostname }}:/add_script.rsc
+    delegate_to: localhost
+
+  - name: run_cmd
+    routeros_command: 
+      commands: 
+        - /ip firewall address-list remove [find where list~"ssh_stage*"]
+        - /system script remove backup
+        - /import add_script.rsc
+        - /file remove add_script.rsc
+        - /system script run backup

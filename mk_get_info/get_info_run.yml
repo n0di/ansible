@@ -1,0 +1,16 @@
+---
+- name: Backup Mikrotik
+  hosts: markets_mikrotiks
+  gather_facts: false
+
+  tasks:
+  - name: run_cmd
+    routeros_command: 
+      commands: 
+        - /ip firewall address-list remove [find where list~"ssh_stage*"]
+        - /system routerboard print
+      wait_for:
+        - result[1] contains current-firmware
+    register: routerboard
+
+  - debug: msg="{{ routerboard.stdout }}"

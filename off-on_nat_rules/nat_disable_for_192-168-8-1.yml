@@ -1,0 +1,20 @@
+---
+- name: Backup Mikrotik
+  hosts: mikrotik
+  gather_facts: false
+
+  tasks:
+
+  - name: Export
+    ansible.builtin.shell: >-
+      sshpass -p '{{ ansible_password }}' ssh -o StrictHostKeyChecking=no {{ ansible_user }}@{{ inventory_hostname }}
+    register: export
+    delegate_to: localhost
+
+  - name: Del_BlackList
+    routeros_command: 
+      commands: /ip firewall address-list remove [find where list~"ssh_stage*"]
+
+  - name: Disable_rules
+    routeros_command:
+      commands: /ip firewall nat disable  [find where dst-address="192.168.8.1"]
